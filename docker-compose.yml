@@ -1,0 +1,46 @@
+services:
+
+  # -------------------------------------------------------------------------
+  # Orchestrator — lightweight FastAPI service
+  # -------------------------------------------------------------------------
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    ports:
+      - "${ORCHESTRATOR_PORT:-8000}:${ORCHESTRATOR_PORT:-8000}"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ORCHESTRATOR_PORT=${ORCHESTRATOR_PORT:-8000}
+      - TASK_QUEUE_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Agent Runtime — one container per task (shown here as a long-running
+  # worker for local dev; in production launch ephemeral containers per task)
+  # -------------------------------------------------------------------------
+  agent-runtime:
+    build:
+      context: .
+      dockerfile: agent_runtime/Dockerfile
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://us.cloud.langfuse.com}
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-http://mcp-server:9000}
+      - TASK_QUEUE_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Redis — task queue + result store (swap for SQS/RabbitMQ in production)
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

@@ -1,0 +1,46 @@
+repos:
+    # Ruff linter - replaces black, flake8, isort
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.1.15
+      hooks:
+          # Run the linter
+          - id: ruff
+            args: [--fix]
+            types_or: [python, pyi]
+          # Run the formatter
+          - id: ruff-format
+            types_or: [python, pyi]
+
+    # Additional useful hooks
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.5.0
+      hooks:
+          # Prevent committing large files
+          - id: check-added-large-files
+            args: ['--maxkb=1000']
+          # Check YAML syntax
+          - id: check-yaml
+            args: [--unsafe]
+          # Check TOML syntax
+          - id: check-toml
+          # Check JSON syntax
+          - id: check-json
+          # Ensure files end with newline
+          - id: end-of-file-fixer
+          # Remove trailing whitespace
+          - id: trailing-whitespace
+          # Check for merge conflicts
+          - id: check-merge-conflict
+          # Check for debug statements
+          - id: debug-statements
+
+    # Type checking with mypy
+    - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v1.8.0
+      hooks:
+          - id: mypy
+            additional_dependencies:
+                - types-requests
+                - pydantic
+            args: [--ignore-missing-imports, --no-strict-optional]
+            exclude: ^scripts/
